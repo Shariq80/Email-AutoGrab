@@ -1,13 +1,52 @@
-<!-- templates/job_postings/create.html -->
 {% extends 'base.html' %}
 
 {% block title %}Create Job Posting{% endblock %}
 
 {% block content %}
 <h2>Create Job Posting</h2>
-<form method="post">
+<form method="post" id="job-posting-form">
     {% csrf_token %}
     {{ form.as_p }}
+    <button type="button" id="generate-subject-line" class="btn btn-secondary">Generate Subject Line</button>
     <button type="submit" class="btn btn-primary">Create</button>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateButton = document.getElementById('generate-subject-line');
+    const subjectLineInput = document.querySelector('input[name="subject_line"]');
+    const titleInput = document.querySelector('input[name="title"]');
+    const departmentInput = document.querySelector('input[name="department"]');
+    
+    generateButton.addEventListener('click', function() {
+        const title = titleInput.value;
+        const department = departmentInput.value;
+        
+        if (!title || !department) {
+            alert('Please fill in the title and department fields first.');
+            return;
+        }
+        
+        fetch('{% url "generate_subject_line" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({
+                title: title,
+                department: department,
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            subjectLineInput.value = data.subject_line;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while generating the subject line.');
+        });
+    });
+});
+</script>
 {% endblock %}
