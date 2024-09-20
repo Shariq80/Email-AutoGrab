@@ -12,12 +12,12 @@ genai.configure(api_key=settings.GEMINI_API_KEY)
 def analyze_resume(resume_text, job_description):
     """
     Analyze a resume against a job description using the Gemini API.
-    Returns a match score between 0 and 1.
+    Returns a match score between 1 and 100.
     """
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     prompt = f"""
     Analyze the following resume for the job description provided. 
-    Provide a match score between 0 and 1, where 1 is a perfect match.
+    Provide a match score between 1 and 100, where 100 is a perfect match.
     Only return the numeric score, without any additional text or explanation.
     
     Resume:
@@ -33,7 +33,7 @@ def analyze_resume(resume_text, job_description):
     
     try:
         match_score = float(response.text.strip())
-        return max(0, min(match_score, 1))  # Ensure score is between 0 and 1
+        return max(1, min(match_score, 100))  # Ensure score is between 0 and 1
     except ValueError:
         print(f"Error parsing match score: {response.text}")
         return 0  # Default to 0 if parsing fails
@@ -91,10 +91,10 @@ def process_resumes():
         job_description = application.job_posting.description
         
         match_score = analyze_resume(resume_text, job_description)
-        
+      
         application.match_score = match_score
         application.save()
-        
+       
         print(f"Processed resume for {application.applicant_name}. Match score: {match_score}")
 
 if __name__ == '__main__':

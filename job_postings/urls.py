@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:pk>/update/', views.JobPostingUpdateView.as_view(), name='job_posting_update'),
     path('<int:pk>/delete/', views.JobPostingDeleteView.as_view(), name='job_posting_delete'),
     path('generate-subject-line/', views.generate_subject_line, name='generate_subject_line'),
+    path('<int:pk>/apply/', views.job_application, name='job_application'),
 ]

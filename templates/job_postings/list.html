@@ -1,37 +1,76 @@
-<!-- templates/job_postings/list.html -->
 {% extends 'base.html' %}
 
 {% block title %}Job Postings{% endblock %}
 
 {% block content %}
-<h2>Job Postings</h2>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Department</th>
-            <th>Location</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for job_posting in job_postings %}
-        <tr>
-            <td>{{ job_posting.title }}</td>
-            <td>{{ job_posting.department }}</td>
-            <td>{{ job_posting.location }}</td>
-            <td>
-                <a href="{% url 'job_posting_detail' job_posting.id %}" class="btn btn-sm btn-info">View</a>
-                <a href="{% url 'job_posting_update' job_posting.id %}" class="btn btn-sm btn-warning">Edit</a>
-                <a href="{% url 'job_posting_delete' job_posting.id %}" class="btn btn-sm btn-danger">Delete</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="4">No job postings available.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<a href="{% url 'job_posting_create' %}" class="btn btn-primary">Create New Job Posting</a>
+<h2 class="text-3xl font-bold mb-6">Job Postings</h2>
+
+<form method="get" class="mb-6 bg-white shadow-md rounded-lg p-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
+            <input type="text" name="search" id="search" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="Search job titles...">
+        </div>
+        <div>
+            <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
+            <select name="department" id="department" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                <option value="">All Departments</option>
+                {% for department in departments %}
+                <option value="{{ department }}">{{ department }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="job_type" class="block text-sm font-medium text-gray-700">Job Type</label>
+            <select name="job_type" id="job_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                <option value="">All Job Types</option>
+                {% for job_type in job_types %}
+                <option value="{{ job_type }}">{{ job_type }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="mt-4">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Filter
+        </button>
+    </div>
+</form>
+
+<div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+            {% for job_posting in job_postings %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">{{ job_posting.title }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ job_posting.department }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ job_posting.location }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <a href="{% url 'job_posting_detail' job_posting.id %}" class="text-blue-600 hover:text-blue-900 mr-2">View</a>
+                    <a href="{% url 'job_posting_update' job_posting.id %}" class="text-indigo-600 hover:text-indigo-900 mr-2">Edit</a>
+                    <a href="{% url 'job_posting_delete' job_posting.id %}" class="text-red-600 hover:text-red-900">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">No job postings available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-6">
+    <a href="{% url 'job_posting_create' %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+        Create New Job Posting
+    </a>
+</div>
 {% endblock %}

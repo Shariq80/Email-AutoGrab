@@ -11,7 +11,7 @@ def process_all_resumes():
     Process all unprocessed resumes for all job postings.
     """
     unprocessed_applications = Application.objects.filter(match_score__isnull=True)
-    
+  
     for application in unprocessed_applications:
         process_single_resume(application)
 

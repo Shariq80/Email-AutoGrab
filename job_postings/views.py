@@ -9,10 +9,34 @@ from .forms import JobPostingForm
 import json
 import uuid
 
+from django.shortcuts import get_object_or_404, redirect
+from .forms import JobApplicationForm
+
 class JobPostingListView(ListView):
     model = JobPosting
     template_name = 'job_postings/list.html'
     context_object_name = 'job_postings'
+
+    def get_queryset(self):
+        queryset = JobPosting.objects.all()
+        search_query = self.request.GET.get('search')
+        department = self.request.GET.get('department')
+        job_type = self.request.GET.get('job_type')
+
+        if search_query:
+            queryset = queryset.filter(title__icontains=search_query)
+        if department:
+            queryset = queryset.filter(department=department)
+        if job_type:
+            queryset = queryset.filter(job_type=job_type)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['departments'] = JobPosting.objects.values_list('department', flat=True).distinct()
+        context['job_types'] = JobPosting.objects.values_list('job_type', flat=True).distinct()
+        return context
 
 class JobPostingCreateView(CreateView):
     model = JobPosting
@@ -36,6 +60,13 @@ class JobPostingDetailView(DetailView):
     template_name = 'job_postings/detail.html'
     context_object_name = 'job_posting'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        applications = self.object.application_set.all().order_by('-match_score')
+        context['applications'] = applications
+        return context
+
+
 @require_POST
 def generate_subject_line(request):
     data = json.loads(request.body)
@@ -48,3 +79,16 @@ def generate_subject_line(request):
     subject_line = slugify(f"{title}-{department}-{uuid.uuid4().hex[:8]}")
     
     return JsonResponse({'subject_line': subject_line})
+
+def job_application(request, pk):
+    job_posting = get_object_or_404(JobPosting, pk=pk)
+    if request.method == 'POST':
+        form = JobApplicationForm(request.POST, request.FILES)
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.job_posting = job_posting
+            application.save()
+            return redirect('job_posting_detail', pk=pk)
+    else:
+        form = JobApplicationForm()
+    return render(request, 'job_postings/apply.html', {'form': form, 'job_posting': job_posting})

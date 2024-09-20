@@ -1,36 +1,39 @@
-<!-- templates/dashboard/index.html -->
 {% extends 'base.html' %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h2>Dashboard</h2>
-<div class="row">
-    <div class="col-md-6">
-        <h3>Recent Job Postings</h3>
-        <ul class="list-group">
+<h2 class="text-3xl font-bold mb-6">Dashboard</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold mb-4">Recent Job Postings</h3>
+        <ul class="divide-y divide-gray-200">
             {% for job_posting in recent_job_postings %}
-            <li class="list-group-item">
-                <a href="{% url 'job_posting_detail' job_posting.id %}">{{ job_posting.title }}</a>
-                <span class="badge bg-primary rounded-pill float-end">{{ job_posting.application_set.count }} applications</span>
+            <li class="py-3 flex justify-between items-center">
+                <a href="{% url 'job_posting_detail' job_posting.id %}" class="text-blue-600 hover:underline">{{ job_posting.title }}</a>
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {{ job_posting.application_set.count }} applications
+                </span>
             </li>
             {% empty %}
-            <li class="list-group-item">No recent job postings.</li>
+            <li class="py-3 text-gray-500">No recent job postings.</li>
             {% endfor %}
         </ul>
     </div>
-    <div class="col-md-6">
-        <h3>Recent Applications</h3>
-        <ul class="list-group">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold mb-4">Recent Applications</h3>
+        <ul class="divide-y divide-gray-200">
             {% for application in recent_applications %}
-            <li class="list-group-item">
-                {{ application.applicant_name }} - {{ application.job_posting.title }}
-                <span class="badge bg-info rounded-pill float-end">Score: {{ application.match_score|floatformat:2 }}</span>
+            <li class="py-3 flex justify-between items-center">
+                <span>{{ application.applicant_name }} - {{ application.job_posting.title }}</span>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    Score: {{ application.match_score|floatformat:2 }}
+                </span>
             </li>
             {% empty %}
-            <li class="list-group-item">No recent applications.</li>
+            <li class="py-3 text-gray-500">No recent applications.</li>
             {% endfor %}
         </ul>
     </div>
 </div>
-{% endblock %}
+{% endblock %}
