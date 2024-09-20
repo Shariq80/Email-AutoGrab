@@ -1,0 +1,37 @@
+<!-- templates/job_postings/list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Job Postings{% endblock %}
+
+{% block content %}
+<h2>Job Postings</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Department</th>
+            <th>Location</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for job_posting in job_postings %}
+        <tr>
+            <td>{{ job_posting.title }}</td>
+            <td>{{ job_posting.department }}</td>
+            <td>{{ job_posting.location }}</td>
+            <td>
+                <a href="{% url 'job_posting_detail' job_posting.id %}" class="btn btn-sm btn-info">View</a>
+                <a href="{% url 'job_posting_update' job_posting.id %}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{% url 'job_posting_delete' job_posting.id %}" class="btn btn-sm btn-danger">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">No job postings available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'job_posting_create' %}" class="btn btn-primary">Create New Job Posting</a>
+{% endblock %}
