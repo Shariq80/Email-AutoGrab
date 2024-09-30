@@ -1,10 +1,19 @@
 # resume_processor/utils/gemini_api.py
 
+import json
+import logging
 import os
-import google.generativeai as genai
+from google.cloud import aiplatform
+from google.oauth2 import service_account
 from django.conf import settings
-from job_postings.models import JobPosting
+import google.generativeai as genai
 from email_processor.models import Application
+from google.ai import generativelanguage as glm
+import re
+from google.ai.generativelanguage_v1beta.types import content
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Configure the Gemini API
 genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -12,31 +21,44 @@ genai.configure(api_key=settings.GEMINI_API_KEY)
 def analyze_resume(resume_text, job_description):
     """
     Analyze a resume against a job description using the Gemini API.
-    Returns a match score between 1 and 100.
+    Returns the raw response from Gemini.
     """
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    generation_config = {
+        "temperature": 1,
+        "top_p": 0.95,
+        "top_k": 64,
+        "max_output_tokens": 8192,
+    }
+
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        generation_config=generation_config,
+    )
+
     prompt = f"""
-    Analyze the following resume for the job description provided. 
-    Provide a match score between 1 and 100, where 100 is a perfect match.
-    Only return the numeric score, without any additional text or explanation.
-    
+    Analyze the following resume against the job description. Provide a JSON response with the following structure:
+    {{
+      "key_skills": {{"matching": [], "missing": []}},
+      "academic_qualification": "",
+      "achievements": [],
+      "responsibilities": {{"matching": [], "missing": []}},
+      "years_of_experience": "",
+      "industry": "",
+      "location": "",
+      "overall_rating": 0,
+      "recommendation": ""
+    }}
+    Ensure 'overall_rating' is between 0 and 10.
+
     Resume:
     {resume_text}
     
     Job Description:
     {job_description}
-    
-    Match Score:
     """
     
     response = model.generate_content(prompt)
-    
-    try:
-        match_score = float(response.text.strip())
-        return max(1, min(match_score, 100))  # Ensure score is between 0 and 1
-    except ValueError:
-        print(f"Error parsing match score: {response.text}")
-        return 0  # Default to 0 if parsing fails
+    return response.text
 
 def extract_text_from_resume(file_path):
     """
@@ -81,21 +103,54 @@ def extract_text_from_docx(file_path):
 
 def process_resumes():
     """
-    Process all unprocessed resumes and update match scores.
+    Process all unprocessed resumes and update with detailed analysis.
     """
-    applications = Application.objects.filter(match_score__isnull=True)
+    applications = Application.objects.filter(processed=False)
     
     for application in applications:
+        process_application(application.id)
+        
+        print(f"Processed resume for {application.applicant_name}. Match score: {application.match_score}")
+
+def process_application(application_id):
+    try:
+        application = Application.objects.get(id=application_id)
+        
+        if application.processed:
+            logger.info(f"Application {application_id} already processed. Skipping.")
+            return
+        
         resume_path = os.path.join(settings.MEDIA_ROOT, application.resume.name)
         resume_text = extract_text_from_resume(resume_path)
         job_description = application.job_posting.description
-        
-        match_score = analyze_resume(resume_text, job_description)
-      
-        application.match_score = match_score
+
+        response_data = analyze_resume(resume_text, job_description)
+        logger.info(f"Gemini API response for application {application_id}: {response_data}")
+
+        process_gemini_response(application, response_data)
+
+        application.processed = True
         application.save()
-       
-        print(f"Processed resume for {application.applicant_name}. Match score: {match_score}")
+        logger.info(f"Successfully processed application {application_id}")
+    except Exception as e:
+        logger.error(f"Error processing application {application_id}: {str(e)}")
+
+def process_gemini_response(application, raw_response):
+    try:
+        # Extract JSON from the response text
+        json_match = re.search(r'```json\s*(.*?)\s*```', raw_response, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1)
+        else:
+            json_str = raw_response
+
+        # Store the raw response in the analysis field
+        application.analysis = json_str
+        application.processed = True
+        application.save()
+        logger.info(f"Successfully updated application {application.id} with Gemini response")
+    except Exception as e:
+        logger.error(f"Error processing Gemini response for application {application.id}: {str(e)}")
 
 if __name__ == '__main__':
     process_resumes()

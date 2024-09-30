@@ -2,15 +2,15 @@
 
 import os
 from django.conf import settings
-from job_postings.models import JobPosting
 from email_processor.models import Application
-from .gemini_api import analyze_resume, extract_text_from_resume
+from job_postings.models import JobPosting
+from .gemini_api import analyze_resume, extract_text_from_resume, process_gemini_response
 
 def process_all_resumes():
     """
     Process all unprocessed resumes for all job postings.
     """
-    unprocessed_applications = Application.objects.filter(match_score__isnull=True)
+    unprocessed_applications = Application.objects.filter(processed=False)
   
     for application in unprocessed_applications:
         process_single_resume(application)
@@ -24,12 +24,11 @@ def process_single_resume(application):
         resume_text = extract_text_from_resume(resume_path)
         job_description = application.job_posting.description
         
-        match_score = analyze_resume(resume_text, job_description)
+        raw_response = analyze_resume(resume_text, job_description)
         
-        application.match_score = match_score
-        application.save()
+        process_gemini_response(application, raw_response)
         
-        print(f"Processed resume for {application.applicant_name}. Match score: {match_score}")
+        print(f"Processed resume for {application.applicant_name}.")
     except Exception as e:
         print(f"Error processing resume for {application.applicant_name}: {str(e)}")
 

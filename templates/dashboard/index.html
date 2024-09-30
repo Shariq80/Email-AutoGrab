@@ -27,7 +27,7 @@
             <li class="py-3 flex justify-between items-center">
                 <span>{{ application.applicant_name }} - {{ application.job_posting.title }}</span>
                 <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                    Score: {{ application.match_score|floatformat:2 }}
+                    {% if application.processed %}Processed{% else %}Pending{% endif %}
                 </span>
             </li>
             {% empty %}
@@ -36,4 +36,4 @@
         </ul>
     </div>
 </div>
-{% endblock %}
+{% endblock %}

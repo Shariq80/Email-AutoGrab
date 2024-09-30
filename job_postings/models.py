@@ -23,8 +23,7 @@ class JobPosting(models.Model):
         return self.title
 
 class JobApplication(models.Model):
-    job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE, related_name='applications')
-    applicant = models.ForeignKey(User, on_delete=models.CASCADE)
+    applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='job_postings_applications')
     resume = models.FileField(upload_to='resumes/')
     cover_letter = models.TextField()
     applied_at = models.DateTimeField(auto_now_add=True)

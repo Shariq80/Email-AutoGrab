@@ -4,26 +4,16 @@
 <div class="bg-white shadow-md rounded-lg p-6">
     <h1 class="text-3xl font-bold mb-4">{{ job_posting.title }}</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-            <p><strong class="text-gray-700">Department:</strong> {{ job_posting.department }}</p>
-            <p><strong class="text-gray-700">Job Type:</strong> {{ job_posting.job_type }}</p>
-            <p><strong class="text-gray-700">Location:</strong> {{ job_posting.location }}</p>
-            <p><strong class="text-gray-700">Subject Line:</strong> {{ job_posting.subject_line }}</p>
-            <p><strong class="text-gray-700">Date Posted:</strong> {{ job_posting.created_at|date:"F d, Y" }}</p>
-        </div>
-        <div>
-            <h2 class="text-xl font-semibold mb-2">Description</h2>
-            <p class="text-gray-600">{{ job_posting.description }}</p>
-        </div>
+    <!-- Job posting details -->
+    <div class="mb-8">
+        <p><strong>Department:</strong> {{ job_posting.department }}</p>
+        <p><strong>Job Type:</strong> {{ job_posting.job_type }}</p>
+        <p><strong>Location:</strong> {{ job_posting.location }}</p>
+        <p><strong>Description:</strong></p>
+        <p>{{ job_posting.description|linebreaks }}</p>
     </div>
 
-    <div class="flex space-x-4 mb-6">
-        <a href="{% url 'job_posting_update' pk=job_posting.pk %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
-        <a href="{% url 'job_posting_delete' pk=job_posting.pk %}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</a>
-        <a href="{% url 'job_posting_list' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Back to Job Listings</a>
-    </div>
-
+    <!-- Applications section -->
     <h2 class="text-2xl font-bold mb-4">Applications</h2>
     {% if applications %}
         <div class="overflow-x-auto">
@@ -32,8 +22,10 @@
                     <tr>
                         <th class="px-4 py-2">Applicant Name</th>
                         <th class="px-4 py-2">Email</th>
-                        <th class="px-4 py-2">Match Score</th>
+                        <th class="px-4 py-2">Received At</th>
+                        <th class="px-4 py-2">Processed</th>
                         <th class="px-4 py-2">Resume</th>
+                        <th class="px-4 py-2">Analysis</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -41,17 +33,50 @@
                     <tr class="{% cycle 'bg-white' 'bg-gray-50' %}">
                         <td class="px-4 py-2">{{ application.applicant_name }}</td>
                         <td class="px-4 py-2">{{ application.applicant_email }}</td>
-                        <td class="px-4 py-2">{{ application.match_score|floatformat:2 }}</td>
+                        <td class="px-4 py-2">{{ application.received_at|date:"Y-m-d H:i" }}</td>
+                        <td class="px-4 py-2">{{ application.processed|yesno:"Yes,No" }}</td>
                         <td class="px-4 py-2">
-                            <a href="{{ application.resume.url }}" target="_blank" class="text-blue-500 hover:underline">View Resume</a>
+                            <a href="{{ application.resume.url }}" class="text-blue-500 hover:underline" target="_blank">View Resume</a>
+                        </td>
+                        <td class="px-4 py-2">
+                            {% if application.analysis %}
+                                <button onclick="toggleAnalysis('analysis-{{ application.id }}')" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">View Analysis</button>
+                            {% else %}
+                                Not available
+                            {% endif %}
                         </td>
                     </tr>
+                    {% if application.analysis %}
+                    <tr id="analysis-{{ application.id }}" style="display: none;">
+                        <td colspan="6" class="px-4 py-2 bg-gray-100">
+                            <pre class="whitespace-pre-wrap">{{ application.analysis }}</pre>
+                        </td>
+                    </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     {% else %}
-        <p class="text-gray-600">No applications yet.</p>
+        <p>No applications yet.</p>
     {% endif %}
+
+    <!-- Action buttons -->
+    <div class="mt-8">
+        <a href="{% url 'job_posting_update' pk=job_posting.pk %}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</a>
+        <a href="{% url 'job_posting_delete' pk=job_posting.pk %}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</a>
+        <a href="{% url 'job_posting_list' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Back to Job Listings</a>
+    </div>
+
+    <script>
+        function toggleAnalysis(id) {
+            var x = document.getElementById(id);
+            if (x.style.display === "none") {
+                x.style.display = "table-row";
+            } else {
+                x.style.display = "none";
+            }
+        }
+    </script>
 </div>
-{% endblock %}
+{% endblock %}

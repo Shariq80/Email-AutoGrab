@@ -4,6 +4,8 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.http import JsonResponse
 from django.utils.text import slugify
 from django.views.decorators.http import require_POST
+
+from email_processor.models import Application
 from .models import JobPosting
 from .forms import JobPostingForm
 import json
@@ -62,7 +64,7 @@ class JobPostingDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        applications = self.object.application_set.all().order_by('-match_score')
+        applications = Application.objects.filter(job_posting=self.object).order_by('-received_at')
         context['applications'] = applications
         return context
 
@@ -92,3 +94,13 @@ def job_application(request, pk):
     else:
         form = JobApplicationForm()
     return render(request, 'job_postings/apply.html', {'form': form, 'job_posting': job_posting})
+
+def job_posting_detail(request, pk):
+    job_posting = get_object_or_404(JobPosting, pk=pk)
+    applications = Application.objects.filter(job_posting=job_posting).order_by('-received_at')
+    
+    context = {
+        'job_posting': job_posting,
+        'applications': applications,
+    }
+    return render(request, 'job_postings/detail.html', context)
