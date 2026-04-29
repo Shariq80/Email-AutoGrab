@@ -1,0 +1,12 @@
+credentials.json
+token.json
+service-credentials.json
+settings.py
+
+# Python bytecode
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env

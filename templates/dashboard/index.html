@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-bold mb-6">Dashboard</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold mb-4">Recent Job Postings</h3>
+        <ul class="divide-y divide-gray-200">
+            {% for job_posting in recent_job_postings %}
+            <li class="py-3 flex justify-between items-center">
+                <a href="{% url 'job_posting_detail' job_posting.id %}" class="text-blue-600 hover:underline">{{ job_posting.title }}</a>
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {{ job_posting.application_set.count }} applications
+                </span>
+            </li>
+            {% empty %}
+            <li class="py-3 text-gray-500">No recent job postings.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold mb-4">Recent Applications</h3>
+        <ul class="divide-y divide-gray-200">
+            {% for application in recent_applications %}
+            <li class="py-3 flex justify-between items-center">
+                <span>{{ application.applicant_name }} - {{ application.job_posting.title }}</span>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                    {% if application.processed %}Processed{% else %}Pending{% endif %}
+                </span>
+            </li>
+            {% empty %}
+            <li class="py-3 text-gray-500">No recent applications.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
